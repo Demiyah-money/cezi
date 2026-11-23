@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>测一测，你是《今天是太阳雨》里的谁</title>
+<style>
+  :root{
+    --cream:#FFF7EA; --tomato:#E8503A; --sun:#FFC53D; --rain:#6FA8DC;
+    --ink:#2B2B2B; --gray:#9A938A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    background:var(--cream); color:var(--ink); min-height:100vh;
+  }
+  .page{display:none; max-width:520px; margin:0 auto; padding:28px 20px 48px; min-height:100vh; flex-direction:column;}
+  .page.active{display:flex;}
+
+  /* 装饰 */
+  .deco{position:fixed; pointer-events:none; z-index:0;}
+  .deco.sun1{top:24px;right:20px;width:64px;height:64px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #FFD97A, var(--sun)); box-shadow:0 0 0 10px rgba(255,197,61,.25);}
+  .deco.drop1{bottom:80px;left:18px;width:16px;height:24px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+    background:var(--rain); opacity:.6; transform:rotate(10deg);}
+  .deco.drop2{top:45%;right:14px;width:12px;height:19px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+    background:var(--rain); opacity:.45; transform:rotate(-8deg);}
+
+  /* 落地页 */
+  .badge{display:inline-block; background:var(--ink); color:#FFF7EA; font-size:13px;
+    padding:6px 14px; border-radius:999px; align-self:center; letter-spacing:1px;}
+  h1{font-size:34px; line-height:1.35; margin:22px 0 10px; text-align:center; font-weight:800;}
+  h1 .red{color:var(--tomato);}
+  .sub{font-size:15px; color:#6B655E; text-align:center; line-height:1.7;}
+  .tags{margin:26px 0; display:flex; flex-direction:column; gap:12px;}
+  .tag{background:#fff; border-radius:16px; padding:14px 16px; display:flex; align-items:center; gap:12px;
+    box-shadow:0 4px 14px rgba(232,80,58,.08); border:2px solid #F3E7D3;}
+  .tag .ck{flex:0 0 22px; height:22px; border-radius:6px; background:#58B368; position:relative;}
+  .tag>div{flex:1; min-width:0;}
+  .tag .ck::after{content:""; position:absolute; left:6px; top:3px; width:6px; height:11px;
+    border:solid #fff; border-width:0 3px 3px 0; transform:rotate(45deg);}
+  .tag b{font-size:15px;} .tag span{font-size:13px; color:#8A837B; display:block; margin-top:2px;}
+  .btn{appearance:none; border:none; cursor:pointer; width:100%; padding:18px 0; border-radius:999px;
+    background:var(--ink); color:#FFF7EA; font-size:19px; font-weight:700; letter-spacing:2px;
+    box-shadow:0 6px 0 #141414; transition:transform .08s, box-shadow .08s;}
+  .btn:active{transform:translateY(4px); box-shadow:0 2px 0 #141414;}
+  .btn.red{background:var(--tomato); box-shadow:0 6px 0 #B93A28;}
+  .btn.red:active{box-shadow:0 2px 0 #B93A28;}
+  .foot{margin-top:auto; padding-top:28px; text-align:center; font-size:12px; color:var(--gray);}
+
+  /* 答题页 */
+  .progress-wrap{margin-bottom:8px;}
+  .qnum{font-size:14px; color:var(--tomato); font-weight:700; margin-bottom:10px; text-align:center;}
+  .bar{height:10px; border-radius:999px; background:#F0E4CE; overflow:hidden;}
+  .bar i{display:block; height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--sun),var(--tomato)); width:0; transition:width .25s ease;}
+  .qcard{background:#fff; border-radius:22px; border:2px solid #F3E7D3; padding:26px 20px;
+    margin:20px 0 22px; box-shadow:0 6px 18px rgba(232,80,58,.08);}
+  .qcard h2{font-size:19px; line-height:1.6; font-weight:700;}
+  .opts{display:flex; flex-direction:column; gap:12px;}
+  .opt{background:#fff; border:2px solid #F0E4CE; border-radius:16px; padding:15px 16px;
+    font-size:15px; line-height:1.5; text-align:left; cursor:pointer; transition:all .15s;}
+  .opt:active{transform:scale(.98);}
+  .opt.picked{background:var(--tomato); border-color:var(--tomato); color:#fff; font-weight:700;}
+
+  /* 结果页 */
+  .r-label{text-align:center; font-size:14px; color:var(--gray); letter-spacing:2px; margin-top:10px;}
+  .r-name{text-align:center; font-size:40px; font-weight:800; color:var(--tomato); margin:8px 0 4px;}
+  .r-title{text-align:center; margin-bottom:20px;}
+  .r-title span{display:inline-block; background:var(--sun); color:var(--ink); font-weight:700;
+    font-size:15px; padding:6px 16px; border-radius:999px;}
+  .r-card{background:#fff; border-radius:20px; border:2px solid #F3E7D3; padding:20px; margin-bottom:14px;}
+  .r-card h3{font-size:14px; color:var(--rain); margin-bottom:10px; letter-spacing:1px;}
+  .trait{display:flex; align-items:center; gap:10px; padding:7px 0; font-size:15px;}
+  .trait::before{content:""; flex:0 0 10px; height:10px; border-radius:50%; background:var(--sun);}
+  .r-quote{font-size:18px; font-weight:700; text-align:center; color:var(--ink); padding:6px 0;}
+  .r-cp{font-size:15px; text-align:center;}
+  .r-cp b{color:var(--tomato);}
+  .r-second{font-size:13px; color:var(--gray); text-align:center; margin:4px 0 20px;}
+</style>
+</head>
+<body>
+
+<!-- ============ 数据区：换一期只需替换 DATA ============ -->
+<script>
+const DATA = {
+  quizTitle: "测一测，你是《今天是太阳雨》里的谁",
+  quizSub: "凭你的脑洞日常，匹配和你同频的太阳雨角色",
+  sellingPoints: [
+    ["求生模式", "测测你的扛事能力"],
+    ["嗑糖方式", "测测你的恋爱脑回路"],
+    ["日常状态", "匹配你的精神状态"],
+    ["角色气质", "找到你的本命人设"]
+  ],
+  startBtn: "点击测试 →",
+  footerNote: "趣味测试仅供娱乐，找到你的太阳雨本命cp",
+  roleOrder: ["郑雨","陈砚周","江勉","高兴","谢宇狄","庄宁","许方梨","刘霖霖","段盛扬","杨姐"],
+  questions: [
+    ["深夜回家，楼道声控灯坏了，你会：", [["摸出手机闪光灯，边蹦迪边上楼","高兴"],["黑着脸爬楼，谁问都不理","江勉"],["站在楼下喊一嗓子，把整层灯喊亮","郑雨"],["转身进便利店，坐到灯修好为止","杨姐"]]],
+    ["同学找你代写一份作业，开价一杯奶茶：", [["先问加不加珍珠，加料另算","江勉"],["不接单，但笔记可以借他参考","陈砚周"],["接了，顺便把全班发展成客户","段盛扬"],["让他抄我的，抄完请我喝杨枝甘露","刘霖霖"]]],
+    ["在便利店蹭插座充电，老板朝你走来：", [["她递来一根加长插座：随便用","杨姐"],["立刻起身假装要买瓶水","庄宁"],["顺口问一句：包月多少钱","郑雨"],["跟老板唠到打烊，收获一枚忘年交","高兴"]]],
+    ["喜欢的人说「你没发现我一直在忍吗」，你：", [["表面高冷，耳朵先红了","陈砚周"],["反问：忍什么？先把话说清楚","许方梨"],["当场心软，连夜给他织围巾","郑雨"],["冷笑一声：呵，那我走？","谢宇狄"]]],
+    ["学校评「生机奖」，你觉得自己能靠什么拿奖：", [["靠一口气吊着的野草生命力","郑雨"],["靠从来不缺觉的精神状态","高兴"],["靠忍功大赛总冠军的定力","陈砚周"],["靠我爸给学校捐的那栋楼","谢宇狄"]]],
+    ["团建玩「谁最可能」，你被cue最多的一条：", [["谁最可能在便利店值夜班睡着","杨姐"],["谁最可能替全组把债还了","郑雨"],["谁最可能掌握全班一手情报","许方梨"],["谁最可能嘴上说不去、身体很诚实","江勉"]]],
+    ["假如穿越成一种文具：", [["订书钉，哪里需要往哪钉","郑雨"],["修正带，嘴上嫌弃手上帮忙","江勉"],["荧光笔，全场最亮的崽","高兴"],["尺子，原则性很强","陈砚周"]]],
+    ["你理想的周末：", [["睡到自然醒，什么都不干","刘霖霖"],["逛街＝情报搜集，一家店都不漏","许方梨"],["说要大扫除，结果躺了一天","江勉"],["去公园看大爷下棋，顺便赢两盘","杨姐"]]],
+    ["群消息99+，你：", [["逐条爬楼，生怕错过一个瓜","许方梨"],["已读不回，装没看见","江勉"],["一条不回，但全都记在小本本上","庄宁"],["负责把群热度顶到999+","段盛扬"]]],
+    ["朋友深夜emo来找你：", [["拉他出门吃辣火锅，辣到没空emo","郑雨"],["递纸巾听他哭完，再塞一串烤肠","杨姐"],["先分析这人值不值得emo","许方梨"],["讲冷笑话，讲到他笑出鼻涕泡","高兴"]]],
+    ["你在KTV的点歌风格：", [["情歌王连唱，款款深情","段盛扬"],["儿歌联唱，带动全场大合唱","高兴"],["只哼不唱，话筒烫手","庄宁"],["点最贵排场的歌单，主打一个砸钱","谢宇狄"]]],
+    ["存到人生第一笔巨款（500块）：", [["存起来，一分钱掰成两半花","郑雨"],["请全宿舍喝奶茶，广结善缘","段盛扬"],["买一支梦寐以求的笔","陈砚周"],["充进便利店会员卡，关东煮自由","杨姐"]]],
+    ["老师突然点名让你回答：", [["站起来先道歉再说答案","庄宁"],["流利作答，顺便指出题目不严谨","陈砚周"],["把同桌的答案大声复述一遍","江勉"],["反问老师：答对能加平时分吗","段盛扬"]]],
+    ["下雨天没带伞：", [["直接冲进雨里，淋湿也算洗澡","郑雨"],["原地等雨停，顺便写套卷子","陈砚周"],["蹭陌生同学的伞，一路聊成朋友","高兴"],["大手一挥打车，绝不委屈自己","谢宇狄"]]],
+    ["你最想拥有的剧中技能：", [["看穿所有人的心事","许方梨"],["瞬移，早八永不迟到","刘霖霖"],["钞能力，买买买","谢宇狄"],["嘴炮输出，火力拉满","高兴"]]],
+    ["被人误会了：", [["不解释，清者自清","陈砚周"],["连夜写八百字小作文自证","江勉"],["找证人摆证据，逻辑闭环","许方梨"],["先给人煮碗面，吃完再慢慢理论","杨姐"]]],
+    ["你的手机相册里最多的是：", [["各种作业、证件、待办截图","郑雨"],["天空和花草，安静美学","庄宁"],["表情包，论千计算","高兴"],["和不同朋友的合影","段盛扬"]]],
+    ["早八课，你：", [["全妆出席，精致是态度","谢宇狄"],["卡点进教室，头发还在放飞","刘霖霖"],["提前十分钟，笔记写好三行","陈砚周"],["顺手帮全宿舍带了早餐，还背了两个包","郑雨"]]],
+    ["遇到有人插队：", [["直接开麦，全队跟我一起爽","高兴"],["心里记仇，表面微笑","庄宁"],["算我倒霉，默默换一队","刘霖霖"],["嗓门不大，往那一站全场自动安静","杨姐"]]],
+    ["朋友要给你介绍对象：", [["开启查户口式盘问","许方梨"],["婉拒，单身贵族","陈砚周"],["秒答应，多见一个是一个","段盛扬"],["先问：会做饭吗？不会免谈","杨姐"]]],
+    ["你生气的时候：", [["闷着，自己慢慢消化","庄宁"],["阴阳怪气十级学者","江勉"],["当场爆发，三秒熄火","高兴"],["不生气，生气伤钱","谢宇狄"]]],
+    ["深夜emo，你会发：", [["仅自己可见的小作文","庄宁"],["朋友圈秒删，配图一轮月亮","江勉"],["不发，睡觉治百病","刘霖霖"],["发条仅他可见，三秒后删除，等他来问","谢宇狄"]]],
+    ["班级群里最活跃的永远是你，因为你：", [["负责第一时间转播大瓜","许方梨"],["负责组织一切吃喝玩乐","高兴"],["负责在关键时刻讲一句扎心实话","陈砚周"],["负责被@出来干活","郑雨"]]],
+    ["你的口头禅最接近：", [["「没事，我可以」","郑雨"],["「随便，都行」","刘霖霖"],["「行，你等着」","江勉"],["「听我说，都听我说」","段盛扬"]]],
+    ["如果给你一间店，你想开：", [["便利店，24小时亮灯那种","杨姐"],["私人咖啡馆，只接待顺眼的人","谢宇狄"],["自习室，安静到听得见翻书声","陈砚周"],["大排档，越夜越热闹","高兴"]]],
+    ["处理旧物的方式：", [["擦得干干净净再送人","庄宁"],["挂二手平台回血","郑雨"],["攒着，万一哪天有用","刘霖霖"],["拍照留念，然后痛快扔掉","高兴"]]],
+    ["走路的时候你：", [["直线前进，目不斜视","陈砚周"],["蹦蹦跳跳，看啥都新鲜","高兴"],["贴着墙根走，安静观察人类","庄宁"],["走出一条蛇形路线，顺便搭讪","段盛扬"]]],
+    ["被起哄表演个节目：", [["讲个笑话，包袱响不响随缘","高兴"],["背首诗，清冷收场","陈砚周"],["立刻推荐别人先上","庄宁"],["我出钱，请大家看","谢宇狄"]]],
+    ["你的存钱风格：", [["塞得满满当当，舍不得花","郑雨"],["想起来了才投一个币","刘霖霖"],["存钱罐？不存在的","段盛扬"],["记账精确到小数点后两位","陈砚周"]]],
+    ["能和剧中人同桌吃饭，你想坐谁旁边：", [["杨姐，让她给我夹菜","杨姐"],["陈砚周，看他细嚼慢咽","陈砚周"],["坐消息最灵通那人旁边，全程吃瓜","许方梨"],["谢宇狄，让他买单","谢宇狄"]]],
+    ["你的秘密基地：", [["便利店靠窗那个固定座位","杨姐"],["天台吹风看云","庄宁"],["学校后门小吃街","郑雨"],["不挑，有我在的地方就热闹","段盛扬"]]],
+    ["测完这个测试，你会：", [["转发给crush，让他也测","段盛扬"],["结果截图当壁纸","庄宁"],["拉着朋友对答案，看是不是我命定","许方梨"],["不测第二遍，睡觉了","刘霖霖"]]]
+  ],
+  results: {
+    "郑雨":   {title:"野草型扛事女主", traits:["生活越压越有劲","嘴上没事心里记账","治愈系小太阳"], quote:"没事，我可以。", cp:"陈砚周"},
+    "陈砚周": {title:"克制型清冷学霸", traits:["口嫌体正直十级","忍字诀宗师","深情全在行动里"], quote:"你没发现我一直在忍吗？", cp:"郑雨"},
+    "江勉":   {title:"嘴硬心软敏感弟弟", traits:["心里门儿清嘴上不饶人","赚钱小能手","关心全带刺"], quote:"谁要帮你，顺路而已。", cp:"许方梨"},
+    "高兴":   {title:"直球小太阳", traits:["精力永远用不完","社交悍匪","藏不住任何情绪"], quote:"这都不磕？", cp:"段盛扬"},
+    "谢宇狄": {title:"全剧反派担当（反派认证）", traits:["排面必须最大","钞能力开路","全身上下嘴最硬"], quote:"呵，你说我该怎么办？", cp:"无 · 官方指定独自美丽"},
+    "庄宁":   {title:"隐忍小透明", traits:["存在感低但超靠谱","情绪稳定天花板","悄悄记住所有善意"], quote:"我没事，真的。", cp:"江勉"},
+    "许方梨": {title:"宿舍情报担当", traits:["吃瓜永远第一线","人间清醒","吐槽精准到毛孔"], quote:"这瓜保真。", cp:"江勉"},
+    "刘霖霖": {title:"佛系松弛大师", traits:["慢半拍但从不误事","知足常乐","天大的事先睡一觉"], quote:"都行，随便。", cp:"段盛扬"},
+    "段盛扬": {title:"社交花蝴蝶", traits:["气氛组核心","暧昧从不落地","朋友遍天下"], quote:"这都不叫我？", cp:"高兴"},
+    "杨姐":   {title:"便利店暖心老板", traits:["人间烟火哲学家","加长插座随便借","一碗关东煮治百病"], quote:"来，趁热吃。", cp:"无 · 全剧大家的大姐"}
+  }
+};
+</script>
+
+<div class="deco sun1"></div>
+<div class="deco drop1"></div>
+<div class="deco drop2"></div>
+
+<!-- 落地页 -->
+<section class="page active" id="page-home">
+  <span class="badge">太阳雨上头测试 · 32题</span>
+  <h1><span class="red">测一测</span><br>你是《今天是太阳雨》里的谁</h1>
+  <p class="sub" id="home-sub"></p>
+  <div class="tags" id="home-tags"></div>
+  <button class="btn" id="btn-start"></button>
+  <p class="foot" id="home-foot"></p>
+</section>
+
+<!-- 答题页 -->
+<section class="page" id="page-quiz">
+  <div class="progress-wrap">
+    <div class="qnum" id="q-num"></div>
+    <div class="bar"><i id="q-bar"></i></div>
+  </div>
+  <div class="qcard"><h2 id="q-text"></h2></div>
+  <div class="opts" id="q-opts"></div>
+</section>
+
+<!-- 结果页 -->
+<section class="page" id="page-result">
+  <p class="r-label">— 你的太阳雨本命角色 —</p>
+  <div class="r-name" id="r-name"></div>
+  <div class="r-title"><span id="r-title"></span></div>
+  <div class="r-card">
+    <h3>人设特征</h3>
+    <div id="r-traits"></div>
+  </div>
+  <div class="r-card">
+    <h3>专属台词</h3>
+    <p class="r-quote" id="r-quote"></p>
+  </div>
+  <div class="r-card">
+    <p class="r-cp" id="r-cp"></p>
+  </div>
+  <p class="r-second" id="r-second"></p>
+  <button class="btn red" id="btn-retry">再测一次</button>
+  <p class="foot">趣味测试仅供娱乐，找到你的太阳雨本命cp</p>
+</section>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const pages = {home:$("page-home"), quiz:$("page-quiz"), result:$("page-result")};
+  function show(name){ for(const k in pages) pages[k].classList.toggle("active", k===name); window.scrollTo(0,0); }
+
+  // 落地页
+  $("home-sub").textContent = DATA.quizSub;
+  $("btn-start").textContent = DATA.startBtn;
+  $("home-foot").textContent = DATA.footerNote;
+  DATA.sellingPoints.forEach(([b,s])=>{
+    const d = document.createElement("div");
+    d.className = "tag";
+    d.innerHTML = '<span class="ck"></span><div><b></b><span class="desc"></span></div>';
+    d.querySelector("b").textContent = b;
+    d.querySelector(".desc").textContent = s;
+    $("home-tags").appendChild(d);
+  });
+
+  // 答题
+  let idx = 0, scores = {};
+  function startQuiz(){
+    idx = 0; scores = {};
+    DATA.roleOrder.forEach(r => scores[r] = 0);
+    renderQ(); show("quiz");
+  }
+  function renderQ(){
+    const [q, opts] = DATA.questions[idx];
+    $("q-num").textContent = "第 " + (idx+1) + " / " + DATA.questions.length + " 题";
+    $("q-bar").style.width = (idx / DATA.questions.length * 100) + "%";
+    $("q-text").textContent = q;
+    const box = $("q-opts"); box.innerHTML = "";
+    opts.forEach(([text, role])=>{
+      const b = document.createElement("button");
+      b.className = "opt"; b.textContent = text;
+      b.onclick = ()=>{
+        b.classList.add("picked");
+        scores[role]++;
+        setTimeout(()=>{
+          idx++;
+          if(idx < DATA.questions.length) renderQ();
+          else finish();
+        }, 180);
+      };
+      box.appendChild(b);
+    });
+  }
+
+  // 结算：最高分，并列按角色池固定顺序取先
+  function finish(){
+    $("q-bar").style.width = "100%";
+    const ranked = DATA.roleOrder.slice().sort((a,b)=>scores[b]-scores[a]);
+    const main = ranked[0], second = ranked[1];
+    const r = DATA.results[main];
+    $("r-name").textContent = main;
+    $("r-title").textContent = r.title;
+    $("r-traits").innerHTML = "";
+    r.traits.forEach(t=>{
+      const d = document.createElement("div");
+      d.className = "trait"; d.textContent = t;
+      $("r-traits").appendChild(d);
+    });
+    $("r-quote").textContent = "“" + r.quote + "”";
+    $("r-cp").innerHTML = "本命CP：<b></b>";
+    $("r-cp").querySelector("b").textContent = r.cp;
+    $("r-second").textContent = "你的次匹配角色是「" + second + "」· 差一点就是TA";
+    show("result");
+  }
+
+  $("btn-start").onclick = startQuiz;
+  $("btn-retry").onclick = startQuiz;
+})();
+</script>
+</body>
+</html>
